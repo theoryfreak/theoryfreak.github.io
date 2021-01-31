@@ -2,7 +2,7 @@
 .navbar {
   overflow: hidden;
   background-color: #333;
-  font-family: 'Arial Bold', sans-serif;
+  font-family: 'Arial Bold';
 }
 
 /* Links inside the navbar */
