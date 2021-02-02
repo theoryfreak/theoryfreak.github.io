@@ -5,31 +5,32 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="navbar">
-  <a href="https://theoryfreak.github.io/">Home</a>
-  <a href="/downloads.html">Downloads</a>
-  <a href="/marketplace.html">MarketPlace</a>
-  <a href="/chatroom.html">Chatroom</a>
-  <a href="/other.html">More</a>
-   
-</div>
-
 <center><h1>Welcome, You!</h1></center>
-  <center><h3><p style="color:red">Greetings, Fellow Hackers</p></h3></center>
-  <center>
-  <p> I hope you enjoy this website as much as I have enjoyed putting it together for you.</p>
-  <p> Here you may find all the lastest hacking software, Tutorials and much more. This website and the contents herein are for educational purposes only! I do NOT hold any responsiblity for what you may do with any software and/or information you download and/or obtain from this website *.theoryfreak.com . I expect you to use anything you may obtain from this website ethically. Happy Hacking! - TheoryFreak </p>
-  </center>
-<center>
-<p>Thank you for visiting my web page!</p>
-  <p><h2>You May Be Interested In Some Of My Featured Programs Below...</h2></p>
-  <p style="color:green"><h3>Google Auto Suggestions Bot - By TheoryFreak 2021</h3></p>
-  <p><img src="https://i.imgur.com/UIfujyL.jpg" alt="Google Bot" width="560" height="315"></p>
-      <p>Supported OS Include: Windows XP / Windows 7 / Windows 10</p>
-  <p><a href="https://www.youtube.com/watch?v=JWyVDQxFdpg"><h4>Watch Video</h4></a></p>
-  <p><a href="https://github.com/theoryfreak/Downloads/blob/main/Google%20Bot%20-%20Free%20Version.zip?raw=true"><h4>DIRECT DOWNLOAD</h4></a></p>
-  <p style="color:red">TheoryFreak 2021</p>
-</center>
+<p style="color:red"><h3>Greetings, Fellow Hackers</h3></p>
+
+    
+<p> I hope you enjoy this website as much as I have enjoyed putting it together for you.</p>
+    
+<button type="button" onclick="loadXMLDoc()">Chat With Hackers</button>
+
+<center><div id="theoryfreak"></div></center>
+  
+<script>
+function loadXMLDoc() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("theoryfreak").innerHTML =
+      this.responseText;
+    }
+
+  };
+  xhttp.open("GET", "https://theoryfreak.com/chatroom.html", true);
+  xhttp.send();
+}
+</script>
+  
+<p style="color:red">TheoryFreak 2021</p>
+
 </body>
 </html>
