@@ -10,7 +10,7 @@
 <p>I hope you enjoy!</p>
 <button type="button" onclick="Chat()">Chat With Hackers</button>
 <button type="button" onclick="GoogleDorks()">Google Dorks</button>
-
+<button type="button" onclick="CommonWords()">Common Words List</button>
   <p> </p>
 <div id="theoryfreak"></div>
 
@@ -42,6 +42,18 @@ function Chat() {
   xhttp.send();
 }
 
+    function CommonWords() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("theoryfreak").innerText =
+      this.responseText;
+    }
+
+  };
+  xhttp.open("GET", "https://raw.githubusercontent.com/theoryfreak/TXT/main/Common%20Words%20List", true);
+  xhttp.send();
+}
 </script>
 
 <p style="color:red">TheoryFreak 2021</p>
