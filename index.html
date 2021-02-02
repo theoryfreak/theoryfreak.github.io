@@ -8,12 +8,13 @@
 <body>
 <h1>Greetings, Fellow Hackers!</h1>
 <p>I hope you enjoy!</p>
-<button type="button" onclick="loadXMLDoc()">Chat With Hackers</button>
-  
-<div id="theoryfreak"></div>
+<button type="button" onclick="Chat()">Chat With Hackers</button>
+<button type="button" onclick="GoogleDorks()">Google Dorks</button>
 
+<div id="theoryfreak"></div>
+'---> this is a tester!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 <script>
-function loadXMLDoc() {
+function Chat() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
@@ -25,8 +26,23 @@ function loadXMLDoc() {
   xhttp.open("GET", "https://theoryfreak.com/chatroom.html", true);
   xhttp.send();
 }
+  
+  function GoogleDorks() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("theoryfreak").innerHTML =
+      this.responseText;
+    }
+
+  };
+  xhttp.open("GET", "https://theoryfreak.com/chatroom.html", true);
+  xhttp.send();
+}
+
 </script>
 
- <p style="color:red">TheoryFreak 2021</p>
+<p style="color:red">TheoryFreak 2021</p>
+
 </body>
 </html>
