@@ -1,32 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TheoryFreak</title>
-<link rel="stylesheet" href="styles.css">
+<title>IP to Hostname Resolver</title>
+<script>
+function resolveIP() {
+    var ipAddress = document.getElementById("ipAddress").value;
+    var outputElement = document.getElementById("output");
+
+    outputElement.innerText = "Resolving...";
+
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                outputElement.innerText = xhr.responseText;
+            } else {
+                outputElement.innerText = "Error: " + xhr.statusText;
+            }
+        }
+    };
+    
+    xhr.open("GET", "resolve.php?ip=" + ipAddress, true);
+    xhr.send();
+}
+</script>
 </head>
-<html>
 <body>
-<center>
-<h3> TheoryFreak - Please Your Offer Below. </h3>
-<form
-  action="https://formspree.io/f/mayrjvwn"
-  method="POST"
->
-  <label>
-    Your email:
-    <input type="email" name="email">
-  </label>
-  <label>
-    Price Offering? :
-    <textarea name="message"></textarea>
-  </label>
-  <!-- your other form fields go here -->
-  <button type="submit">Send</button>
-</form>
-</center>
+<h2>IP to Hostname Resolver</h2>
+<label for="ipAddress">Enter IP Address:</label>
+<input type="text" id="ipAddress">
+<button onclick="resolveIP()">Resolve</button>
+<p id="output"></p>
 </body>
 </html>
-
-
-
-
