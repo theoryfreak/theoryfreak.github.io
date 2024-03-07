@@ -46,64 +46,16 @@
         // Draw snake
         ctx.fillStyle = "green";
         snake.forEach(segment => ctx.fillRect(segment.x, segment.y, blockSize, blockSize));
+
+        // Draw "Game Over" if game is over
+        if (isGameOver()) {
+            ctx.fillStyle = "black";
+            ctx.font = "30px Arial";
+            ctx.fillText("Game Over", 130, 200);
+        }
     }
 
     function update() {
         const head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
-        // Check if the snake has collided with the wall or itself
-        if (
-            head.x < 0 || head.x >= width ||
-            head.y < 0 || head.y >= height ||
-            snake.some(segment => segment.x === head.x && segment.y === head.y)
-        ) {
-            alert("Game Over!");
-            resetGame();
-            return;
-        }
-
-        snake.unshift(head);
-
-        // Check if the snake has eaten the food
-        if (head.x === food.x && head.y === food.y) {
-            food = getRandomPosition();
-        } else {
-            snake.pop();
-        }
-    }
-
-    function resetGame() {
-        snake = [{x: 10, y: 10}];
-        food = getRandomPosition();
-        dx = 0;
-        dy = 0;
-    }
-
-    function gameLoop() {
-        update();
-        draw();
-        requestAnimationFrame(gameLoop);
-    }
-
-    document.addEventListener("keydown", event => {
-        const key = event.key.toLowerCase();
-
-        if (key === "arrowup" && dy === 0) {
-            dx = 0;
-            dy = -blockSize;
-        } else if (key === "arrowdown" && dy === 0) {
-            dx = 0;
-            dy = blockSize;
-        } else if (key === "arrowleft" && dx === 0) {
-            dx = -blockSize;
-            dy = 0;
-        } else if (key === "arrowright" && dx === 0) {
-            dx = blockSize;
-            dy = 0;
-        }
-    });
-
-    gameLoop();
-</script>
-</body>
-</html>
+        // Check if the snake has col
