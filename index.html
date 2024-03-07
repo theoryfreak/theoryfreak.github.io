@@ -1,37 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IP to Hostname Resolver</title>
-<script>
-function resolveIP() {
-    var ipAddress = document.getElementById("ipAddress").value;
-    var outputElement = document.getElementById("output");
-
-    outputElement.innerText = "Resolving...";
-
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-                outputElement.innerText = xhr.responseText;
-            } else {
-                outputElement.innerText = "Error: " + xhr.statusText;
-            }
-        }
-    };
-    
-    xhr.open("GET", "resolve.php?ip=" + ipAddress, true);
-    xhr.send();
-}
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Information</title>
 </head>
 <body>
-<h2>IP to Hostname Resolver</h2>
-<label for="ipAddress">Enter IP Address:</label>
-<input type="text" id="ipAddress">
-<button onclick="resolveIP()">Resolve</button>
-<p id="output"></p>
+    <h1>IP Information</h1>
+    <label for="ipAddress">Enter IP Address:</label>
+    <input type="text" id="ipAddress" name="ipAddress">
+    <button onclick="getIpInfo()">Get Info</button>
+    <div id="info"></div>
+
+    <script src="script.js"></script>
 </body>
 </html>
