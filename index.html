@@ -1,58 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Information</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Game</title>
+<style>
+    canvas {
+        background-color: #eee;
+        display: block;
+        margin: 0 auto;
+    }
+</style>
 </head>
 <body>
-    <h1>IP Information</h1>
-    <!-- Text area for entering multiple IP addresses -->
-    <label for="ipAddresses">Enter IP Addresses (one per line):</label>
-    <textarea id="ipAddresses" name="ipAddresses" rows="5"></textarea>
-    <br>
-    <!-- Button to trigger the getIpInfo() function -->
-    <button onclick="getIpInfo()">Get Info</button>
-    <br><br>
-    <!-- Text area for displaying information about the IP addresses -->
-    <label for="ipInfo">IP Information:</label>
-    <textarea id="ipInfo" name="ipInfo" rows="10" readonly></textarea>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
 
-    <script>
-        function getIpInfo() {
-            var ipAddresses = document.getElementById('ipAddresses').value.split('\n');
-            var ipInfoTextArea = document.getElementById('ipInfo');
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-            // Clear previous content
-            ipInfoTextArea.value = '';
+    const blockSize = 20;
+    const width = canvas.width;
+    const height = canvas.height;
 
-            ipAddresses.forEach(ipAddress => {
-                if (ipAddress.trim() !== '') {
-                    fetchIpInfo(ipAddress.trim(), ipInfoTextArea);
-                }
-            });
+    let snake = [{x: 10, y: 10}];
+    let food = getRandomPosition();
+
+    let dx = 0;
+    let dy = 0;
+
+    function getRandomPosition() {
+        return {
+            x: Math.floor(Math.random() * (width / blockSize)) * blockSize,
+            y: Math.floor(Math.random() * (height / blockSize)) * blockSize
+        };
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw food
+        ctx.fillStyle = "red";
+        ctx.fillRect(food.x, food.y, blockSize, blockSize);
+
+        // Draw snake
+        ctx.fillStyle = "green";
+        snake.forEach(segment => ctx.fillRect(segment.x, segment.y, blockSize, blockSize));
+    }
+
+    function update() {
+        const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+        // Check if the snake has collided with the wall or itself
+        if (
+            head.x < 0 || head.x >= width ||
+            head.y < 0 || head.y >= height ||
+            snake.some(segment => segment.x === head.x && segment.y === head.y)
+        ) {
+            alert("Game Over!");
+            resetGame();
+            return;
         }
 
-        async function fetchIpInfo(ipAddress, ipInfoTextArea) {
-            var url = `https://ipinfo.io/${ipAddress}/json?token=a5aa57f3084bd9`;
+        snake.unshift(head);
 
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                // Append IP information to the text area
-                ipInfoTextArea.value += `IP Address: ${data.ip}\n`;
-                ipInfoTextArea.value += `Hostname: ${data.hostname}\n`;
-                ipInfoTextArea.value += `City: ${data.city}\n`;
-                ipInfoTextArea.value += `Region: ${data.region}\n`;
-                ipInfoTextArea.value += `Country: ${data.country}\n`;
-                ipInfoTextArea.value += `Location: ${data.loc}\n`;
-                ipInfoTextArea.value += `Organization: ${data.org}\n\n`;
-            } catch (error) {
-                console.error('Error:', error);
-                ipInfoTextArea.value += `Error fetching information for ${ipAddress}\n\n`;
-            }
+        // Check if the snake has eaten the food
+        if (head.x === food.x && head.y === food.y) {
+            food = getRandomPosition();
+        } else {
+            snake.pop();
         }
-    </script>
+    }
+
+    function resetGame() {
+        snake = [{x: 10, y: 10}];
+        food = getRandomPosition();
+        dx = 0;
+        dy = 0;
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener("keydown", event => {
+        const key = event.key.toLowerCase();
+
+        if (key === "arrowup" && dy === 0) {
+            dx = 0;
+            dy = -blockSize;
+        } else if (key === "arrowdown" && dy === 0) {
+            dx = 0;
+            dy = blockSize;
+        } else if (key === "arrowleft" && dx === 0) {
+            dx = -blockSize;
+            dy = 0;
+        } else if (key === "arrowright" && dx === 0) {
+            dx = blockSize;
+            dy = 0;
+        }
+    });
+
+    gameLoop();
+</script>
 </body>
 </html>
