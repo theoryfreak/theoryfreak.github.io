@@ -7,11 +7,52 @@
 </head>
 <body>
     <h1>IP Information</h1>
-    <label for="ipAddress">Enter IP Address:</label>
-    <input type="text" id="ipAddress" name="ipAddress">
+    <!-- Text area for entering multiple IP addresses -->
+    <label for="ipAddresses">Enter IP Addresses (one per line):</label>
+    <textarea id="ipAddresses" name="ipAddresses" rows="5"></textarea>
+    <br>
+    <!-- Button to trigger the getIpInfo() function -->
     <button onclick="getIpInfo()">Get Info</button>
-    <div id="info"></div>
+    <br><br>
+    <!-- Text area for displaying information about the IP addresses -->
+    <label for="ipInfo">IP Information:</label>
+    <textarea id="ipInfo" name="ipInfo" rows="10" readonly></textarea>
 
-    <script src="script.js"></script>
+    <script>
+        function getIpInfo() {
+            var ipAddresses = document.getElementById('ipAddresses').value.split('\n');
+            var ipInfoTextArea = document.getElementById('ipInfo');
+
+            // Clear previous content
+            ipInfoTextArea.value = '';
+
+            ipAddresses.forEach(ipAddress => {
+                if (ipAddress.trim() !== '') {
+                    fetchIpInfo(ipAddress.trim(), ipInfoTextArea);
+                }
+            });
+        }
+
+        async function fetchIpInfo(ipAddress, ipInfoTextArea) {
+            var url = `https://ipinfo.io/${ipAddress}/json?token=a5aa57f3084bd9`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Append IP information to the text area
+                ipInfoTextArea.value += `IP Address: ${data.ip}\n`;
+                ipInfoTextArea.value += `Hostname: ${data.hostname}\n`;
+                ipInfoTextArea.value += `City: ${data.city}\n`;
+                ipInfoTextArea.value += `Region: ${data.region}\n`;
+                ipInfoTextArea.value += `Country: ${data.country}\n`;
+                ipInfoTextArea.value += `Location: ${data.loc}\n`;
+                ipInfoTextArea.value += `Organization: ${data.org}\n\n`;
+            } catch (error) {
+                console.error('Error:', error);
+                ipInfoTextArea.value += `Error fetching information for ${ipAddress}\n\n`;
+            }
+        }
+    </script>
 </body>
 </html>
