@@ -1,6 +1,6 @@
 function getIpInfo() {
     var ipAddress = document.getElementById('ipAddress').value;
-    var url = `https://ipinfo.io/${ipAddress}/json`;
+    var url = `https://ipinfo.io/${ipAddress}/json?token=a5aa57f3084bd9`;
 
     fetch(url)
         .then(response => response.json())
