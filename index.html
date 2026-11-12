@@ -1,22 +1,685 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anthony W. 2K24 </title>
+<title>SearchMiner - Search Suggestion Tool</title>
+
 <style>
-    canvas {
-        background-color: #90EE90;
-        display: block;
-        margin: 0 auto;
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #0b0d12;
+    color: #e5e7eb;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 1050px;
+    margin: 50px auto;
+    padding: 25px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.header h1 {
+    font-size: 38px;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.header h1 span {
+    color: #3b82f6;
+}
+
+.header p {
+    color: #8b95a7;
+}
+
+.panel {
+    background: #141821;
+    border: 1px solid #252c39;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.service {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1d2532;
+    border: 1px solid #303b4c;
+    padding: 10px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.service:hover {
+    border-color: #3b82f6;
+}
+
+.service input {
+    accent-color: #3b82f6;
+    cursor: pointer;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 15px;
+    background: #0c111b;
+    border: 1px solid #303b4c;
+    border-radius: 7px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+input[type="text"]:focus {
+    border-color: #3b82f6;
+}
+
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.option {
+    color: #b8c1d1;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.option input {
+    accent-color: #3b82f6;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 13px 22px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.search-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.search-btn:hover {
+    background: #1d4ed8;
+}
+
+.clear-btn {
+    background: #293344;
+    color: white;
+}
+
+.clear-btn:hover {
+    background: #374151;
+}
+
+.copy-btn {
+    background: #1e293b;
+    color: #93c5fd;
+    padding: 8px 13px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.results-header h2 {
+    font-size: 19px;
+}
+
+.counter {
+    color: #60a5fa;
+    font-size: 13px;
+}
+
+.result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: #0d131e;
+    border: 1px solid #252f40;
+    border-radius: 7px;
+    margin-bottom: 9px;
+}
+
+.result-text {
+    overflow-wrap: anywhere;
+    font-size: 14px;
+}
+
+.source {
+    display: inline-block;
+    color: #60a5fa;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 9px;
+    background: #172b49;
+    padding: 5px 7px;
+    border-radius: 4px;
+}
+
+.result button {
+    flex-shrink: 0;
+    padding: 7px 10px;
+    background: #202b3b;
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+#status {
+    color: #60a5fa;
+    font-size: 13px;
+    margin-top: 15px;
+}
+
+.empty {
+    color: #788397;
+    text-align: center;
+    padding: 25px;
+}
+
+@media(max-width:600px) {
+    .container {
+        margin: 15px auto;
+        padding: 15px;
     }
+
+    .header h1 {
+        font-size: 30px;
+    }
+
+    .result {
+        align-items: flex-start;
+    }
+}
 </style>
 </head>
-<body>
-<center>
 
-<p><h3>[ TheoryFreak ]</h2></p>  
-<p> <marquee>Anthony Was Here!!!</marquee></p>
-<p> Contact, pulse@msn.com</p>
-   </center> 
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Search<span>Miner</span></h1>
+        <p>Discover search suggestions across multiple platforms.</p>
+    </div>
+
+    <div class="panel">
+
+        <label>Select Search Services</label>
+
+        <div class="services">
+
+            <label class="service">
+                <input type="checkbox" value="google" checked>
+                Google
+            </label>
+
+            <label class="service">
+                <input type="checkbox" value="youtube" checked>
+                YouTube
+            </label>
+
+            <label class="service">
+                <input type="checkbox" value="bing">
+                Bing
+            </label>
+
+        </div>
+
+        <label for="keyword">Enter Your Search Phrase</label>
+
+        <input
+            type="text"
+            id="keyword"
+            placeholder="Enter a keyword or phrase..."
+        >
+
+        <div class="options">
+
+            <label class="option">
+                <input type="checkbox" id="letters" checked>
+                A-Z Expansion
+            </label>
+
+            <label class="option">
+                <input type="checkbox" id="numbers" checked>
+                0-9 Expansion
+            </label>
+
+        </div>
+
+        <div class="buttons">
+            <button class="search-btn" id="searchButton">
+                Search
+            </button>
+
+            <button class="clear-btn" id="clearButton">
+                Clear Results
+            </button>
+        </div>
+
+        <div id="status"></div>
+
+    </div>
+
+    <div class="panel">
+
+        <div class="results-header">
+            <h2>Search Suggestions</h2>
+
+            <span class="counter" id="counter">
+                0 Results
+            </span>
+
+            <button class="copy-btn" id="copyAll">
+                Copy All
+            </button>
+        </div>
+
+        <div id="results">
+            <div class="empty">
+                Your search suggestions will appear here.
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const resultsContainer = document.getElementById("results");
+const statusElement = document.getElementById("status");
+const counterElement = document.getElementById("counter");
+
+let totalResults = 0;
+let isSearching = false;
+
+const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+function getSelectedServices() {
+
+    return Array.from(
+        document.querySelectorAll(
+            '.service input:checked'
+        )
+    ).map(input => input.value);
+
+}
+
+function getSearchQueries(keyword) {
+
+    let queries = [keyword];
+
+    let charactersToUse = "";
+
+    if (document.getElementById("letters").checked) {
+        charactersToUse += "abcdefghijklmnopqrstuvwxyz";
+    }
+
+    if (document.getElementById("numbers").checked) {
+        charactersToUse += "0123456789";
+    }
+
+    for (const character of charactersToUse) {
+
+        // Preserve the exact phrase and existing spaces.
+        queries.push(keyword + character);
+
+    }
+
+    return queries;
+
+}
+
+async function getSuggestions(service, keyword) {
+
+    let url;
+
+    if (service === "google") {
+
+        url =
+        "https://suggestqueries.google.com/complete/search?client=firefox&q="
+        + encodeURIComponent(keyword);
+
+    }
+
+    else if (service === "youtube") {
+
+        url =
+        "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q="
+        + encodeURIComponent(keyword);
+
+    }
+
+    else if (service === "bing") {
+
+        url =
+        "https://api.bing.com/osjson.aspx?query="
+        + encodeURIComponent(keyword);
+
+    }
+
+    try {
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Request failed");
+        }
+
+        const data = await response.json();
+
+        if (Array.isArray(data[1])) {
+            return data[1];
+        }
+
+        return [];
+
+    } catch (error) {
+
+        console.error(service, error);
+        return [];
+
+    }
+
+}
+
+function addResult(suggestion, service) {
+
+    const result = document.createElement("div");
+    result.className = "result";
+
+    const textContainer = document.createElement("div");
+    textContainer.className = "result-text";
+
+    const source = document.createElement("span");
+    source.className = "source";
+    source.textContent = "[" + service.toUpperCase() + "]";
+
+    const suggestionText = document.createElement("span");
+    suggestionText.textContent = suggestion;
+
+    textContainer.appendChild(source);
+    textContainer.appendChild(suggestionText);
+
+    const copyButton = document.createElement("button");
+    copyButton.textContent = "Copy";
+
+    copyButton.addEventListener("click", async () => {
+
+        try {
+            await navigator.clipboard.writeText(suggestion);
+            copyButton.textContent = "Copied!";
+            setTimeout(() => {
+                copyButton.textContent = "Copy";
+            }, 1200);
+        } catch (error) {
+            copyButton.textContent = "Copy failed";
+        }
+
+    });
+
+    result.appendChild(textContainer);
+    result.appendChild(copyButton);
+
+    resultsContainer.appendChild(result);
+
+    totalResults++;
+
+    counterElement.textContent =
+        totalResults + " Results";
+
+}
+
+async function runSearch() {
+
+    if (isSearching) return;
+
+    const keyword =
+        document.getElementById("keyword").value;
+
+    if (!keyword.trim()) {
+
+        statusElement.textContent =
+            "Please enter a search phrase.";
+
+        return;
+
+    }
+
+    const services = getSelectedServices();
+
+    if (services.length === 0) {
+
+        statusElement.textContent =
+            "Please select at least one search service.";
+
+        return;
+
+    }
+
+    isSearching = true;
+
+    document.getElementById("searchButton").disabled = true;
+
+    const queries = getSearchQueries(keyword);
+
+    const batchSize = 5;
+
+    const totalTasks = queries.length * services.length;
+
+    let completedTasks = 0;
+
+    statusElement.textContent =
+        "Starting search...";
+
+    for (
+        let i = 0;
+        i < queries.length;
+        i += batchSize
+    ) {
+
+        const batch = queries.slice(i, i + batchSize);
+
+        const tasks = [];
+
+        for (const query of batch) {
+
+            for (const service of services) {
+
+                tasks.push({
+                    query: query,
+                    service: service
+                });
+
+            }
+
+        }
+
+        const responses = await Promise.all(
+
+            tasks.map(async task => {
+
+                const suggestions = await getSuggestions(
+                    task.service,
+                    task.query
+                );
+
+                return {
+                    suggestions: suggestions,
+                    service: task.service
+                };
+
+            })
+
+        );
+
+        for (const response of responses) {
+
+            for (const suggestion of response.suggestions) {
+
+                // Keep duplicates, as requested.
+                addResult(
+                    suggestion,
+                    response.service
+                );
+
+            }
+
+        }
+
+        completedTasks += tasks.length;
+
+        statusElement.textContent =
+            "Searching: " +
+            completedTasks +
+            " / " +
+            totalTasks +
+            " searches completed.";
+
+    }
+
+    statusElement.textContent =
+        "Search completed! Found " +
+        totalResults +
+        " suggestions.";
+
+    isSearching = false;
+
+    document.getElementById("searchButton").disabled = false;
+
+}
+
+function clearResults() {
+
+    if (isSearching) return;
+
+    resultsContainer.innerHTML =
+        '<div class="empty">Your search suggestions will appear here.</div>';
+
+    totalResults = 0;
+
+    counterElement.textContent = "0 Results";
+
+    statusElement.textContent = "";
+
+}
+
+async function copyAllResults() {
+
+    const resultElements =
+        resultsContainer.querySelectorAll(".result");
+
+    const lines = [];
+
+    resultElements.forEach(result => {
+
+        const source =
+            result.querySelector(".source").textContent;
+
+        const suggestion =
+            result.querySelector(".result-text span:last-child").textContent;
+
+        lines.push(source + " " + suggestion);
+
+    });
+
+    if (lines.length === 0) return;
+
+    try {
+
+        await navigator.clipboard.writeText(
+            lines.join("\n")
+        );
+
+        document.getElementById("copyAll").textContent =
+            "Copied!";
+
+        setTimeout(() => {
+
+            document.getElementById("copyAll").textContent =
+                "Copy All";
+
+        }, 1500);
+
+    } catch (error) {
+
+        statusElement.textContent =
+            "Unable to copy results.";
+
+    }
+
+}
+
+document.getElementById("searchButton")
+    .addEventListener("click", runSearch);
+
+document.getElementById("clearButton")
+    .addEventListener("click", clearResults);
+
+document.getElementById("copyAll")
+    .addEventListener("click", copyAllResults);
+
+document.getElementById("keyword")
+    .addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+            runSearch();
+        }
+
+    });
+
+</script>
+
 </body>
+</html>
