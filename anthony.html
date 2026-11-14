@@ -1,1 +1,451 @@
-was up
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autocomplete Anomaly Scanner</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#090d15;color:#e5eaf3;
+ font-family:Arial,sans-serif;padding:20px
+}
+main{max-width:1100px;margin:auto}
+h1{color:#70aaff;margin-bottom:5px}
+.sub{color:#8493aa;margin-bottom:22px}
+.panel{
+ background:#111a29;border:1px solid #26354a;
+ border-radius:12px;padding:18px;margin-bottom:17px
+}
+label{display:block;color:#aebed3;font-size:13px;margin-bottom:7px}
+input,select{
+ background:#0a1220;border:1px solid #34465f;
+ color:white;padding:12px;border-radius:7px;width:100%
+}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+button{
+ background:#337ee8;color:white;border:0;
+ padding:11px 16px;border-radius:7px;
+ font-weight:bold;cursor:pointer;margin:5px 4px 5px 0
+}
+button.secondary{background:#26364c}
+button.stop{background:#a63b48}
+button:disabled{opacity:.4}
+.checks{display:flex;flex-wrap:wrap;gap:13px}
+.checks label{display:flex;gap:6px;align-items:center}
+.checks input{width:auto}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#0a1220;padding:13px;border-radius:8px}
+.stat strong{display:block;font-size:25px;color:#70aaff}
+.stat small{color:#8493aa}
+.progress{height:7px;background:#26354a;border-radius:9px;margin-top:15px}
+#bar{height:100%;width:0;background:#48a4ff;border-radius:9px}
+.status{color:#91a5c0;font-size:13px;margin-top:12px}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:11px;border-bottom:1px solid #26354a;text-align:left;font-size:13px}
+th{color:#8ea6c4;background:#172438}
+td{overflow-wrap:anywhere}
+.new{color:#56dca1;font-weight:bold}
+.tag{color:#70aaff}
+.tablewrap{overflow:auto;max-height:500px}
+.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.toolbar input{max-width:260px}
+@media(max-width:650px){
+ .grid{grid-template-columns:1fr}
+ .stats{grid-template-columns:repeat(2,1fr)}
+ body{padding:12px}
+}
+</style>
+</head>
+<body>
+<main>
+
+<h1>Autocomplete Anomaly Scanner</h1>
+<div class="sub">Discover unusual autocomplete behavior through symbol experimentation.</div>
+
+<div class="panel">
+ <div class="grid">
+  <div>
+   <label>Base search phrase</label>
+   <input id="seed" value="how to make">
+  </div>
+  <div>
+   <label>Autocomplete source</label>
+   <select id="engine">
+    <option value="google">Google</option>
+    <option value="youtube">YouTube</option>
+   </select>
+  </div>
+ </div>
+
+ <br>
+ <label>Experiment categories</label>
+ <div class="checks">
+  <label><input type="checkbox" value="wildcards" checked> Wildcards</label>
+  <label><input type="checkbox" value="quotes" checked> Quotes</label>
+  <label><input type="checkbox" value="brackets" checked> Brackets</label>
+  <label><input type="checkbox" value="punctuation" checked> Punctuation</label>
+  <label><input type="checkbox" value="operators" checked> Operators</label>
+  <label><input type="checkbox" value="unicode" checked> Unicode</label>
+  <label><input type="checkbox" value="combinations" checked> Combinations</label>
+ </div>
+
+ <br>
+ <div class="grid">
+  <div>
+   <label>Delay between requests (milliseconds)</label>
+   <input id="delay" type="number" value="1000" min="500">
+  </div>
+  <div>
+   <label>Maximum combination depth</label>
+   <select id="depth">
+    <option value="2">2 symbols</option>
+    <option value="3">3 symbols</option>
+   </select>
+  </div>
+ </div>
+
+ <br>
+ <button id="start">START SCANNER</button>
+ <button id="stop" class="stop" disabled>STOP</button>
+ <button id="clear" class="secondary">CLEAR</button>
+ <div class="progress"><div id="bar"></div></div>
+ <div id="status" class="status">Ready to scan.</div>
+</div>
+
+<div class="panel">
+ <div class="stats">
+  <div class="stat"><strong id="tested">0</strong><small>Tests performed</small></div>
+  <div class="stat"><strong id="total">0</strong><small>Suggestions found</small></div>
+  <div class="stat"><strong id="unique">0</strong><small>Unique suggestions</small></div>
+  <div class="stat"><strong id="anomalies">0</strong><small>Anomalies</small></div>
+ </div>
+</div>
+
+<div class="panel">
+ <div class="toolbar">
+  <div><b>Discovered anomalies</b></div>
+  <input id="filter" placeholder="Filter results...">
+ </div>
+ <br>
+ <button class="secondary" id="csv">EXPORT CSV</button>
+ <button class="secondary" id="json">EXPORT JSON</button>
+ <div class="tablewrap">
+  <table>
+   <thead>
+    <tr>
+     <th>Suggestion</th>
+     <th>Technique</th>
+     <th>Modified query</th>
+     <th>Novelty</th>
+     <th>Score</th>
+    </tr>
+   </thead>
+   <tbody id="results">
+    <tr><td colspan="5">No results yet.</td></tr>
+   </tbody>
+  </table>
+ </div>
+</div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+
+let running=false,stop=false;
+let records=[];
+let baseline=new Set();
+let tested=0,total=0,anomalies=0;
+let seen=new Set();
+
+const techniques={
+ wildcards:[
+  "*","?","_*","*?","?*","**","***","[*]","(*)","{*}"
+ ],
+ quotes:[
+  '"', "'", '""', "''", '“', '”',
+  '"*"','("*")'
+ ],
+ brackets:[
+  "()", "[]", "{}", "<>", "[*]",
+  "{*}", "(*", "*)"
+ ],
+ punctuation:[
+  ".",",",";",":","!","…","_","-",
+  "/","\\","|","~","@","#","$","%","&"
+ ],
+ operators:[
+  "+","=","^","-","OR","AND",
+  "site:","intitle:","inurl:",
+  "before:","after:"
+ ],
+ unicode:[
+  "★","→","※","§","∞","✓","◆",
+  "™","©","®","•","—","¿","¡"
+ ],
+ combinations:[
+  '"*"',"'*'","[*]","{?}","(*)",
+  "*?","?*","**","_*_","|*|",
+  '"?"','(?)','[*?]','{*?}'
+ ]
+};
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function makeTests(seed){
+ let tests=[];
+ let selected=[...document.querySelectorAll('.checks input:checked')]
+  .map(x=>x.value);
+
+ function add(query,tech){
+  if(!tests.some(x=>x.query===query))
+   tests.push({query,tech});
+ }
+
+ add(seed,"BASELINE");
+
+ selected.forEach(group=>{
+  techniques[group].forEach(symbol=>{
+   add(seed+" "+symbol,group);
+   add(symbol+" "+seed,group);
+  });
+ });
+
+ if(selected.includes("combinations")){
+  let symbols=["*","?","_","-","~","|","!","[","]","(",")",'"'];
+  let depth=Number($("depth").value);
+
+  for(let i=0;i<symbols.length;i++){
+   for(let j=0;j<symbols.length;j++){
+    add(seed+" "+symbols[i]+symbols[j],"combination");
+    if(depth===3){
+     for(let k=0;k<symbols.length;k++){
+      if(i===j && j===k)continue;
+      add(seed+" "+symbols[i]+symbols[j]+symbols[k],"combination");
+     }
+    }
+   }
+  }
+ }
+ return tests;
+}
+
+function endpoint(query){
+ let source=$("engine").value;
+ let url="https://suggestqueries.google.com/complete/search?client=firefox&q="
+  +encodeURIComponent(query);
+
+ if(source==="youtube")url+="&ds=yt";
+
+ return url+"&hl=en&gl=us";
+}
+
+async function request(query){
+ const url=endpoint(query);
+
+ // Direct request first; if browser CORS blocks it,
+ // try a public proxy as a fallback.
+ const urls=[
+  url,
+  "https://api.allorigins.win/raw?url="+encodeURIComponent(url),
+  "https://corsproxy.io/?url="+encodeURIComponent(url)
+ ];
+
+ let error;
+
+ for(const target of urls){
+  try{
+   const response=await fetch(target);
+   if(!response.ok)throw Error("HTTP "+response.status);
+
+   const data=await response.json();
+   if(!Array.isArray(data)||!Array.isArray(data[1]))
+    throw Error("Unexpected response");
+
+   return data[1];
+  }catch(e){
+   error=e;
+  }
+ }
+ throw error||Error("Unable to fetch suggestions");
+}
+
+function updateStats(){
+ $("tested").textContent=tested;
+ $("total").textContent=total;
+ $("unique").textContent=seen.size;
+ $("anomalies").textContent=anomalies;
+}
+
+function addResults(suggestions,query,tech){
+ suggestions.forEach(suggestion=>{
+  const normalized=suggestion.toLowerCase().trim();
+  if(!normalized)return;
+
+  const isNew=!baseline.has(normalized);
+
+  if(isNew)anomalies++;
+
+  const score=isNew?100:0;
+
+  records.push({
+   suggestion,tech,query,
+   isNew,score
+  });
+
+  seen.add(normalized);
+  total++;
+ });
+}
+
+function render(){
+ const filter=$("filter").value.toLowerCase();
+ const tbody=$("results");
+ tbody.innerHTML="";
+
+ let filtered=records.filter(r=>
+  (r.suggestion+" "+r.tech+" "+r.query)
+   .toLowerCase().includes(filter)
+ ).slice().reverse();
+
+ if(!filtered.length){
+  tbody.innerHTML='<tr><td colspan="5">No matching results.</td></tr>';
+  return;
+ }
+
+ filtered.forEach(r=>{
+  const tr=document.createElement("tr");
+
+  const values=[
+   r.suggestion,
+   r.tech,
+   r.query,
+   r.isNew?"NEW":"Baseline",
+   r.score
+  ];
+
+  values.forEach((v,i)=>{
+   const td=document.createElement("td");
+   td.textContent=v;
+   if(i===0)td.style.fontWeight="bold";
+   if(i===3&&r.isNew)td.className="new";
+   if(i===1)td.className="tag";
+   tr.appendChild(td);
+  });
+
+  tbody.appendChild(tr);
+ });
+}
+
+async function scan(){
+ if(running)return;
+
+ const seed=$("seed").value.trim();
+ if(!seed)return alert("Enter a search phrase.");
+
+ running=true;
+ stop=false;
+ tested=0;total=0;anomalies=0;
+ records=[];seen.clear();baseline.clear();
+
+ $("start").disabled=true;
+ $("stop").disabled=false;
+ $("status").textContent="Preparing experiments...";
+
+ const tests=makeTests(seed);
+ const delay=Math.max(500,Number($("delay").value)||1000);
+
+ // Establish baseline first.
+ try{
+  const base=await request(seed);
+  base.forEach(s=>baseline.add(s.toLowerCase()));
+  addResults(base,seed,"BASELINE");
+  tested++;
+ }catch(e){
+  $("status").textContent="Baseline failed: "+e.message;
+ }
+
+ for(let i=0;i<tests.length;i++){
+  if(stop)break;
+
+  const item=tests[i];
+  if(item.tech==="BASELINE")continue;
+
+  $("status").textContent=
+   "Testing "+(i+1)+" / "+tests.length+
+   " | "+item.tech+" | "+item.query;
+
+  try{
+   const suggestions=await request(item.query);
+   addResults(suggestions,item.query,item.tech);
+  }catch(e){
+   console.warn(e);
+  }
+
+  tested++;
+  updateStats();
+  render();
+
+  $("bar").style.width=
+   ((i+1)/tests.length*100)+"%";
+
+  await sleep(delay);
+ }
+
+ running=false;
+ $("start").disabled=false;
+ $("stop").disabled=true;
+
+ $("status").textContent=
+  (stop?"Scan stopped. ":"Scan complete. ")+
+  tested+" tests performed.";
+
+ updateStats();
+ render();
+}
+
+$("start").onclick=scan;
+$("stop").onclick=()=>stop=true;
+$("filter").oninput=render;
+
+$("clear").onclick=()=>{
+ records=[];seen.clear();baseline.clear();
+ tested=total=anomalies=0;
+ updateStats();render();
+ $("bar").style.width="0%";
+ $("status").textContent="Cleared.";
+};
+
+$("csv").onclick=()=>{
+ const rows=[
+  ["Suggestion","Technique","Query","New","Score"],
+  ...records.map(r=>[
+   r.suggestion,r.tech,r.query,r.isNew,r.score
+  ])
+ ];
+
+ const csv=rows.map(row=>
+  row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")
+ ).join("\n");
+
+ download("autocomplete-anomalies.csv",csv);
+};
+
+$("json").onclick=()=>{
+ download("autocomplete-anomalies.json",
+  JSON.stringify(records,null,2));
+};
+
+function download(name,content){
+ const blob=new Blob([content],{type:"text/plain"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download=name;
+ a.click();
+ URL.revokeObjectURL(a.href);
+}
+
+</script>
+</body>
+</html>
