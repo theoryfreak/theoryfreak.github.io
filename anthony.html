@@ -15,8 +15,7 @@
     }
     h1 { margin-bottom: 5px; }
     p { color: #94a3b8; margin-top: 0; }
-    textarea {
-      width: 100%;
+    textarea, select {
       padding: 12px;
       border-radius: 8px;
       border: 1px solid #334155;
@@ -24,12 +23,16 @@
       color: #fff;
       font-size: 14px;
       box-sizing: border-box;
+    }
+    textarea {
+      width: 100%;
       margin-bottom: 15px;
     }
     .controls {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
       margin-bottom: 25px;
     }
     button {
@@ -87,6 +90,13 @@
 
   <div class="controls">
     <button id="extractBtn" onclick="processVideos()">Extract Transcripts</button>
+    <select id="proxySelect" title="Select CORS Proxy">
+      <option value="auto">Proxy: Auto-Fallback</option>
+      <option value="allorigins">AllOrigins (Works locally)</option>
+      <option value="codetabs">CodeTabs (Works locally)</option>
+      <option value="corsproxy">CorsProxy.io</option>
+      <option value="corsdev">Proxy.Cors.Dev (Hosted sites)</option>
+    </select>
     <button class="secondary" onclick="copyAll()">Copy All Text</button>
     <button class="secondary" onclick="downloadTxt()">Download .TXT</button>
     <button class="secondary" onclick="clearAll()">Clear</button>
@@ -96,13 +106,21 @@
   <div id="results"></div>
 
   <script>
-    const PROXY = "https://cors.dev";
+    const PROXIES = {
+      allorigins: (url) => `https://allorigins.win{encodeURIComponent(url)}`,
+      codetabs: (url) => `https://codetabs.com{encodeURIComponent(url)}`,
+      corsproxy: (url) => `https://corsproxy.io{encodeURIComponent(url)}`,
+      corsdev: (url) => `https://cors.dev{url}`
+    };
+
     let extractedData = [];
 
     function getVideoId(url) {
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/;
-      const match = url.trim().match(regex);
-      return match ? match[1] : null;
+      const cleaned = url.trim();
+      const match = cleaned.match(/(?:v=|\/shorts\/|\/embed\/|\/v\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (match && match[1]) return match[1];
+      if (/^[a-zA-Z0-9_-]{11}$/.test(cleaned)) return cleaned;
+      return null;
     }
 
     function decodeHtml(html) {
@@ -111,32 +129,76 @@
       return txt.value;
     }
 
+    function extractCaptionTracks(html) {
+      const marker = '"captionTracks":';
+      const idx = html.indexOf(marker);
+      if (idx === -1) return null;
+
+      let start = html.indexOf('[', idx);
+      if (start === -1) return null;
+
+      let depth = 0;
+      for (let i = start; i < html.length; i++) {
+        if (html[i] === '[') depth++;
+        else if (html[i] === ']') depth--;
+
+        if (depth === 0) {
+          try {
+            return JSON.parse(html.slice(start, i + 1));
+          } catch (e) {
+            return null;
+          }
+        }
+      }
+      return null;
+    }
+
+    async function fetchWithProxy(targetUrl) {
+      const mode = document.getElementById("proxySelect").value;
+      const order = mode === "auto"
+        ? ["allorigins", "codetabs", "corsproxy", "corsdev"]
+        : [mode];
+
+      let lastError = "Failed to fetch";
+      for (const key of order) {
+        try {
+          const res = await fetch(PROXIES[key](targetUrl));
+          if (!res.ok) {
+            lastError = `${key} returned HTTP ${res.status}`;
+            continue;
+          }
+          const text = await res.text();
+          if (text && text.length > 50) return text;
+        } catch (err) {
+          lastError = `${key}: ${err.message}`;
+        }
+      }
+      throw new Error(lastError);
+    }
+
     async function fetchTranscript(videoId) {
       const videoUrl = `https://youtube.com{videoId}`;
-      const response = await fetch(PROXY + videoUrl);
-      if (!response.ok) throw new Error("Failed to reach YouTube via proxy.");
-      
-      const html = await response.text();
-      
+      const html = await fetchWithProxy(videoUrl);
+
+      if (html.includes("://youtube.com") || html.includes("Our systems have detected unusual traffic")) {
+        throw new Error("YouTube blocked the proxy IP (consent/bot check). Try switching proxies.");
+      }
+
       const titleMatch = html.match(/<title>(.*?)<\/title>/);
       const title = titleMatch ? decodeHtml(titleMatch[1].replace(" - YouTube", "")) : videoId;
 
-      const captionMatch = html.match(/"captionTracks":(\[.*?\])/);
-      if (!captionMatch) {
+      const captionTracks = extractCaptionTracks(html);
+      if (!captionTracks || captionTracks.length === 0) {
         throw new Error("No captions/transcript available for this video.");
       }
 
-      const captionTracks = JSON.parse(captionMatch[1]);
       const track = captionTracks.find(t => t.languageCode === 'en') || captionTracks[0];
-      
-      const transcriptRes = await fetch(PROXY + track.baseUrl);
-      if (!transcriptRes.ok) throw new Error("Failed to fetch transcript XML.");
-      const xmlText = await transcriptRes.text();
+      const xmlText = await fetchWithProxy(track.baseUrl);
 
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, "text/xml");
       const textNodes = xmlDoc.getElementsByTagName("text");
-      
+
       let lines = [];
       for (let i = 0; i < textNodes.length; i++) {
         const cleanLine = decodeHtml(textNodes[i].textContent)
